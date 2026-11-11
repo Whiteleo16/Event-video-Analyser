@@ -1,0 +1,18 @@
+# Local environment files and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies, build output, and tool caches
+**/node_modules/
+**/dist/
+.dist/
+**/.vite/
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+**/venv/
+
+# Local uploads and generated output
+backend/uploads/*
+backend/generated/*

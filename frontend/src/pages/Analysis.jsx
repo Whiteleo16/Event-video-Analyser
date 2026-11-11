@@ -1,0 +1,18 @@
+import { useState } from "react";
+import { AlertCircle, ArrowRight, Clapperboard, Play, RotateCcw, ScanLine } from "lucide-react";
+import PageHeading from "../components/PageHeading";
+import VideoUploader from "../components/VideoUploader";
+import VideoPreview from "../components/VideoPreview";
+import AnalysisProgress from "../components/AnalysisProgress";
+import DetectionViewer from "../components/DetectionViewer";
+import EventTimeline from "../components/EventTimeline";
+import { useAnalysis } from "../hooks/useAnalysis";
+
+export default function Analysis(){
+  const [file,setFile]=useState(null);const [eventType,setEventType]=useState("Auto-detect");const analysis=useAnalysis();
+  async function submit(e){e.preventDefault();if(!file)return;try{await analysis.analyze(file);}catch{}}
+  const payload=analysis.result?.result||analysis.result||{};
+  return <><PageHeading eyebrow="VIDEO WORKSPACE" title="Analyse an event" description="Upload a recording and prepare it for intelligent event analysis."/><div className="analysis-grid"><section className="panel"><div className="panel-heading"><div><span className="step-label">STEP 01</span><h2>Upload your video</h2><p>Choose a recorded cultural event, presentation or stage performance.</p></div><span className="panel-icon"><Clapperboard size={20}/></span></div><form onSubmit={submit}><VideoUploader onFileSelected={setFile} disabled={analysis.status==="uploading"||analysis.status==="processing"}/><label className="field-label event-type-label">Event category <span className="optional">Optional</span><select className="select-control" value={eventType} onChange={e=>setEventType(e.target.value)}><option>Auto-detect</option><option>Cultural programme</option><option>Dance performance</option><option>Singing performance</option><option>Presentation</option><option>Speech</option><option>Panel discussion</option><option>Prize distribution</option></select></label><button className="primary-button full" disabled={!file||analysis.status==="uploading"||analysis.status==="processing"}><Play size={16}/> Start video analysis <ArrowRight size={17}/></button></form><AnalysisProgress status={analysis.status} progress={analysis.progress}/>{analysis.error&&<div className="error-panel"><AlertCircle size={18}/><span>{analysis.error} Make sure the Flask backend is running and exposes the expected endpoint.</span></div>}{analysis.status!=="idle"&&<button className="text-button" onClick={analysis.reset}><RotateCcw size={15}/> Reset analysis</button>}</section>
+  <section className="panel"><div className="panel-heading"><div><span className="step-label">VIDEO PREVIEW</span><h2>Selected recording</h2><p>Check the video before sending it for analysis.</p></div></div><VideoPreview file={file}/>{file&&<div className="video-meta"><span>{file.name}</span><small>{(file.size/(1024*1024)).toFixed(1)} MB</small></div>}</section></div>
+  <section className="section-block"><div className="section-title-row"><div><h2>Analysis output</h2><p>Detection frames and activity timeline returned by the backend.</p></div><span className="status-pill neutral">{analysis.status==="completed"?"Results received":"Waiting for analysis"}</span></div><div className="output-grid"><div className="panel"><div className="panel-heading"><div><h3><ScanLine size={17}/> Object detections</h3><p>Bounding boxes on sampled frames.</p></div></div><DetectionViewer imageUrl={payload.annotated_frame_url} detections={payload.detections||[]}/></div><div className="panel"><div className="panel-heading"><div><h3><Clapperboard size={17}/> Activity timeline</h3><p>Predicted stage activities and timestamps.</p></div></div><EventTimeline events={payload.events||[]}/></div></div></section></>;
+}
